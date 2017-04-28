@@ -23,7 +23,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/PartnerFusionInc/wsdl2go/wsdl"
 )
 
 // An Encoder generates Go code from WSDL definitions.
@@ -765,7 +765,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		return false
 	}
 	ge.needsStdPkg["encoding/xml"] = true
-	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
+	ge.needsExtPkg["github.com/PartnerFusionInc/wsdl2go/soap"] = true
 	in[0] = renameParam(in[0], "α")
 	out[0] = renameParam(out[0], "β")
 	typ := strings.SplitN(out[0], " ", 2)
@@ -1252,12 +1252,12 @@ func (ge *goEncoder) genAttributes(w io.Writer, ct *wsdl.ComplexType) error {
 		}
 	} else if ct.Attributes != nil {
 		attributes = ct.Attributes
-	} else {
-		return errors.New("attributes expected but not present")
 	}
 
-	for _, a := range attributes {
-		ge.genAttributeField(w, a)
+	if len(attributes) > 0 {
+		for _, a := range attributes {
+			ge.genAttributeField(w, a)
+		}
 	}
 
 	return nil
