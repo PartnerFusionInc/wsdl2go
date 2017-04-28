@@ -25,6 +25,8 @@ resources are downloaded. It tries automatically but might fail
 due to authentication or bad SSL certificates. You can force it
 anyway. YOLO.
 
+Use -c for customizing what functions are generated from wsdl.
+
 Here's how to use the generated code: Let's say you generate the
 Go code for the hello service, which provides an Echo method that
 takes an EchoRequest and returns an EchoReply. To use it, you have
