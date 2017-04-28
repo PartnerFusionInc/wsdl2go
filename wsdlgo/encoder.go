@@ -1252,12 +1252,12 @@ func (ge *goEncoder) genAttributes(w io.Writer, ct *wsdl.ComplexType) error {
 		}
 	} else if ct.Attributes != nil {
 		attributes = ct.Attributes
-	} else {
-		return errors.New("attributes expected but not present")
 	}
 
-	for _, a := range attributes {
-		ge.genAttributeField(w, a)
+	if len(attributes) > 0 {
+		for _, a := range attributes {
+			ge.genAttributeField(w, a)
+		}
 	}
 
 	return nil
