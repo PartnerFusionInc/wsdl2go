@@ -35,16 +35,30 @@ type AuthHeader struct {
 	Password  string `xml:"ns:password"`
 }
 
+// UseResiliencyLibrary sets a new pester client with built in request
+// resiliency.
+func (c *Client) UseResiliencyLibrary() {
+	c.ResilientClient = pester.New()
+}
+
+type HttpClient interface {
+	//func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
+	//func (c *Client) Do(req *Request) (*Response, error) {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // Client is a SOAP client.
 type Client struct {
-	URL         string         // URL of the server
-	Namespace   string         // SOAP Namespace
-	Envelope    string         // Optional SOAP Envelope
-	Header      Header         // Optional SOAP Header
-	ContentType string         // Optional Content-Type (default text/xml)
-	Config      *pester.Client // Optional pestor client
-	//Config      *http.Client        // Optional HTTP client
-	Pre func(*http.Request) // Optional hook to modify outbound requests
+	URL         string // URL of the server
+	Namespace   string // SOAP Namespace
+	Envelope    string // Optional SOAP Envelope
+	Header      Header // Optional SOAP Header
+	ContentType string // Optional Content-Type (default text/xml)
+	//ResilientClient *pester.Client      // Optional pestor client
+	//Config          *http.Client        // Optional HTTP client
+	ResilientClient HttpClient          // Optional pestor client
+	Config          HttpClient          // Optional HTTP client
+	Pre             func(*http.Request) // Optional hook to modify outbound requests
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -70,10 +84,17 @@ func (c *Client) RoundTrip(in, out Message) error {
 	if ct == "" {
 		ct = "text/xml"
 	}
-	cli := c.Config
-	//if cli == nil {
-	//	cli = http.DefaultClient
-	//	}
+
+	var cli HttpClient
+	if c.ResilientClient != nil {
+		cli = c.ResilientClient
+	} else {
+		cli = c.Config
+		if cli == nil {
+			cli = http.DefaultClient
+		}
+	}
+
 	r, err := http.NewRequest("POST", c.URL, &b)
 	if err != nil {
 		return err
