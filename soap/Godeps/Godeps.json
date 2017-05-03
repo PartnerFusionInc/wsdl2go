@@ -1,0 +1,11 @@
+{
+	"ImportPath": "github.com/PartnerFusionInc/wsdl2go/soap",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/sethgrid/pester",
+			"Rev": "4f4c0a67b6496764028e1ab9fd8dfb630282ed2f"
+		}
+	]
+}
