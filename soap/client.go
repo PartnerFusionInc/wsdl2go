@@ -8,7 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
+
+	"github.com/sethgrid/pester"
 )
 
 // A RoundTripper executes a request passing the given req as the SOAP
@@ -36,19 +37,14 @@ type AuthHeader struct {
 
 // Client is a SOAP client.
 type Client struct {
-	URL         string              // URL of the server
-	Namespace   string              // SOAP Namespace
-	Envelope    string              // Optional SOAP Envelope
-	Header      Header              // Optional SOAP Header
-	ContentType string              // Optional Content-Type (default text/xml)
-	Config      *http.Client        // Optional HTTP client
-	Pre         func(*http.Request) // Optional hook to modify outbound requests
-}
-
-var OutputToStdout = false
-
-func (c *Client) SetOutput(outputToStdout bool) {
-	OutputToStdout = outputToStdout
+	URL         string         // URL of the server
+	Namespace   string         // SOAP Namespace
+	Envelope    string         // Optional SOAP Envelope
+	Header      Header         // Optional SOAP Header
+	ContentType string         // Optional Content-Type (default text/xml)
+	Config      *pester.Client // Optional pestor client
+	//Config      *http.Client        // Optional HTTP client
+	Pre func(*http.Request) // Optional hook to modify outbound requests
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -75,9 +71,9 @@ func (c *Client) RoundTrip(in, out Message) error {
 		ct = "text/xml"
 	}
 	cli := c.Config
-	if cli == nil {
-		cli = http.DefaultClient
-	}
+	//if cli == nil {
+	//	cli = http.DefaultClient
+	//	}
 	r, err := http.NewRequest("POST", c.URL, &b)
 	if err != nil {
 		return err
@@ -96,16 +92,6 @@ func (c *Client) RoundTrip(in, out Message) error {
 		limReader := io.LimitReader(resp.Body, 1024*1024)
 		body, _ := ioutil.ReadAll(limReader)
 		return fmt.Errorf("%q: %q", resp.Status, body)
-	}
-
-	//OutputToStdout = true
-	// this is useful for debugging requests.  Note that it will cause an error
-	// when decoding for return as the resp.Body has already been read
-	if OutputToStdout {
-		_, err = io.Copy(os.Stdout, resp.Body)
-		if err != nil {
-			fmt.Println("copy error: ", err)
-		}
 	}
 	return xml.NewDecoder(resp.Body).Decode(out)
 }
