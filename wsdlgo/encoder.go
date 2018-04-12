@@ -9,7 +9,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"go/parser"
 	"go/token"
@@ -1176,6 +1175,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	if c > 2 {
 		if len(ct.Attributes) > 0 || ct.SimpleContent != nil {
 			fmt.Fprintf(w, "type %s struct {\n", name)
+
 			ge.genAttributes(w, ct)
 			//todo: check new lines
 			fmt.Fprintln(w, "}\n\n")
@@ -1245,11 +1245,7 @@ func (ge *goEncoder) genAttributes(w io.Writer, ct *wsdl.ComplexType) error {
 	var attributes []*wsdl.Attribute
 
 	if ct.SimpleContent != nil && ct.SimpleContent.Extension != nil {
-		if len(ct.SimpleContent.Extension.Attributes) > 0 {
-			attributes = ct.SimpleContent.Extension.Attributes
-		} else {
-			return ge.genExtensionField(w, ct)
-		}
+		return ge.genExtensionField(w, ct)
 	} else if ct.Attributes != nil {
 		attributes = ct.Attributes
 	}
@@ -1286,22 +1282,28 @@ func (ge *goEncoder) genExtensionField(w io.Writer, c *wsdl.ComplexType) error {
 	if eBase[0] == "s" {
 		goEType = ge.wsdl2goType(eBase[1])
 	} else {
-		return errors.New(fmt.Sprintf("unhandled base: ", eBase[0]))
+		return fmt.Errorf("unhandled base: ", eBase[0])
 	}
 
 	name := strings.Split(c.Name, "_")[1]
 
 	_, err := fmt.Fprintf(
 		w,
-		"%s %s `xml:\"%s,omitempty,attr\" json:\"%s,omitempty\"`\n",
+		"%s %s `xml:\",chardata\" json:\"%s,omitempty\"`\n",
 		name,
 		goEType,
-		name,
 		name,
 	)
 
 	if err != nil {
 		return err
+	}
+
+	if len(e.Attributes) > 0 {
+		attributes := e.Attributes
+		for _, a := range attributes {
+			ge.genAttributeField(w, a)
+		}
 	}
 
 	return nil
